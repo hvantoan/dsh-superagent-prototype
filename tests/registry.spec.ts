@@ -14,9 +14,9 @@ import { feishuKind } from '../src/sources/feishu.ts'
 import { githubKind } from '../src/sources/github.ts'
 
 const probe: SourceKind<{ interval: number }> = {
-  kind: 'probe', title: { zh: '探针', en: 'Probe' }, description: { zh: '', en: '' }, health: [],
+  kind: 'probe', title: { zh: '探针', en: 'Probe', vi: 'Probe' }, description: { zh: '', en: '', vi: '' }, health: [],
   schema: z.object({ interval: z.number().int().min(1).default(5) }).strict(),
-  fields: [{ key: 'interval', type: 'number', min: 1, max: 60, label: { zh: '间隔', en: 'Interval' } }],
+  fields: [{ key: 'interval', type: 'number', min: 1, max: 60, label: { zh: '间隔', en: 'Interval', vi: 'Khoảng cách' } }],
 }
 
 describe('Source registry', () => {
@@ -44,7 +44,7 @@ describe('Source registry', () => {
     const read: unknown[] = []
     sources.register({ ...probe,
       channel: { send: async (_host, message) => { sent.push(message); return 'sent' },
-        link: address => ({ url: `https://probe/${address.room}`, label: { zh: '探针', en: 'Probe' } }) },
+        link: address => ({ url: `https://probe/${address.room}`, label: { zh: '探针', en: 'Probe', vi: 'Probe' } }) },
       threadContext: { messageId: trigger => String(trigger.meta.id), read: async (_commands, trigger, part, cursor, config) => {
         read.push([trigger.id, part, cursor, config.interval])
         return { messages: [{ id: 'm1', from: 'u', at: '1', text: '' }],
@@ -57,8 +57,8 @@ describe('Source registry', () => {
     expect(sent).toEqual([message('probe')])
     // A kind that is not installed keeps its replies waiting; links to it have no page.
     expect(await sources.send(message('retired'), commands)).toBe('waiting')
-    expect(sources.link(message('probe').channel, {})).toEqual({ url: 'https://probe/r', label: { zh: '探针', en: 'Probe' } })
-    expect(sources.link(message('retired').channel, {})).toEqual({ url: '', label: { zh: 'retired', en: 'retired' } })
+    expect(sources.link(message('probe').channel, {})).toEqual({ url: 'https://probe/r', label: { zh: '探针', en: 'Probe', vi: 'Probe' } })
+    expect(sources.link(message('retired').channel, {})).toEqual({ url: '', label: { zh: 'retired', en: 'retired', vi: 'retired' } })
     const trigger = { id: 't1', source: 'probe', threads: [{ source: 'probe', id: '1' }], actor: { source: 'probe', id: 'u' }, human: true,
       at: '', text: 'hi', meta: { id: 'm1' } }
     const context = sources.threadContext(trigger)!
@@ -114,7 +114,7 @@ describe('Source registry', () => {
     expect(sources.find('https://github.com/acme/widgets/pull/7#issuecomment-3')).toEqual({ threads: ['github:7'], terms: [] })
     expect(sources.find('see om_abc and om_abc, om_def')).toEqual({ threads: [], terms: ['om_abc', 'om_def'] })
     expect(sources.find('login fails')).toEqual({ threads: [], terms: [] })
-    expect(feishuKind.policy!.unnamed).toEqual({ person: { zh: '飞书用户', en: 'Feishu user' }, bot: { zh: '飞书机器人', en: 'Feishu bot' } })
+    expect(feishuKind.policy!.unnamed).toEqual({ person: { zh: '飞书用户', en: 'Feishu user', vi: 'Người dùng Feishu' }, bot: { zh: '飞书机器人', en: 'Feishu bot', vi: 'Bot Feishu' } })
   })
   it('refuses a second registration of one kind and forgets a kind after its disposer runs', () => {
     const sources = new SourceRegistry(() => SettingsSchema.parse({}))

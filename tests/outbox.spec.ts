@@ -29,9 +29,9 @@ it('holds every message while processing is paused, and sends it once processing
 
 it('keeps a message for a Source that is not installed waiting, and sends it once the Source\'s kind registers', async () => {
   const sent: OutboundMessage[] = []
-  const probe: SourceKind<Record<string, never>> = { kind: 'probe', title: { zh: '探针', en: 'Probe' }, description: { zh: '', en: '' }, health: [],
+  const probe: SourceKind<Record<string, never>> = { kind: 'probe', title: { zh: '探针', en: 'Probe', vi: 'Probe' }, description: { zh: '', en: '', vi: '' }, health: [],
     schema: z.object({}).strict(), fields: [],
-    channel: { send: async (_host, message) => { sent.push(message); return 'sent' }, link: () => ({ url: '', label: { zh: '探针', en: 'Probe' } }) } }
+    channel: { send: async (_host, message) => { sent.push(message); return 'sent' }, link: () => ({ url: '', label: { zh: '探针', en: 'Probe', vi: 'Probe' } }) } }
   h.runtime.outbox.send({ id: 'waiting', channel: { source: 'probe', thread: 'probe:1', address: {} }, text: 'Done', kind: 'reply' })
   await h.runtime.sendReplies()
   expect([h.runtime.outbox.status('waiting'), h.runtime.health.reply?.state]).toEqual(['pending', 'ready'])

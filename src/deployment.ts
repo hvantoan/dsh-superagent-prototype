@@ -20,6 +20,8 @@ export const Config = s.object({
     .description('Pages of thread context one assessment may read.').volatile(),
   admissionContextTimeoutMs: s.number().min(LIMITS.admissionContextTimeoutMs.min).max(LIMITS.admissionContextTimeoutMs.max).step(1)
     .default(15000).description('Time limit of one context read during an assessment, in milliseconds.').volatile(),
+  publicOrigin: s.string().default('')
+    .description('Public origin the panel is served under, such as https://panel.example.com behind a tunnel; the management API then accepts same-site requests for that origin.').volatile(),
 })
 export type DeploymentConfig = ReturnType<typeof Config>
 export interface Machine {
@@ -27,6 +29,7 @@ export interface Machine {
   promptMaxChars: Volatile<number>
   admissionContextMaxPages: Volatile<number>
   admissionContextTimeoutMs: Volatile<number>
+  publicOrigin: Volatile<string>
 }
 const MOVED: Record<string, string> = {
   repository: 'on the GitHub Source', branchPrefix: 'in the prepare command of the Execution settings', github: 'on the GitHub Source',
@@ -38,8 +41,10 @@ const MOVED: Record<string, string> = {
 export function machineOf(config: DeploymentConfig): Machine {
   const unknown = Object.keys(config).filter(key => !(key in (Config.dict ?? {})))
   if (unknown.length) throw new Error(`dsh-superagent configuration has keys it does not use: ${unknown.map(key => MOVED[key] ? `${key} (now ${MOVED[key]})` : key).join(', ')}; docs/006-deployment.md lists the keys`)
-  const { stateDir, promptMaxChars, admissionContextMaxPages, admissionContextTimeoutMs } = config
-  return { stateDir, promptMaxChars, admissionContextMaxPages, admissionContextTimeoutMs }
+  const { stateDir, promptMaxChars, admissionContextMaxPages, admissionContextTimeoutMs, publicOrigin } = config
+  if (publicOrigin.get() !== '' && !/^https?:\/\/[A-Za-z0-9.-]+(:[0-9]+)?$/.test(publicOrigin.get()))
+    throw new Error('publicOrigin must be a bare origin like https://panel.example.com, without path or trailing slash')
+  return { stateDir, promptMaxChars, admissionContextMaxPages, admissionContextTimeoutMs, publicOrigin }
 }
 
 export const GithubAccountsSchema = z.object({
@@ -47,15 +52,19 @@ export const GithubAccountsSchema = z.object({
   cli: z.string().trim().default(''),
 })
 export const FeishuBotSchema = z.object({ cli: z.string().trim().default('') })
+export const JiraCliSchema = z.object({ cli: z.string().trim().default('') })
 /** Source configuration keys that affect deployment setup and trigger a restart when changed. */
-export const SETUP_FIELDS: Readonly<Record<string, readonly string[]>> = { github: Object.keys(GithubAccountsSchema.shape), feishu: Object.keys(FeishuBotSchema.shape) }
+export const SETUP_FIELDS: Readonly<Record<string, readonly string[]>> = { github: Object.keys(GithubAccountsSchema.shape), feishu: Object.keys(FeishuBotSchema.shape), jira: Object.keys(JiraCliSchema.shape) }
 
 export interface Deployment extends Machine {
   repository: string
   github: { cli: string; login: string; noreply: string }
   feishu?: FeishuBot
+  jira?: JiraAccount
 }
 export interface FeishuBot { cli: string; appId: string; brand: 'feishu' | 'lark'; botId: string; name: string }
+/** The Jira account behind the configured CLI, resolved by setup's `jira me` probe. */
+export interface JiraAccount { cli: string; name: string }
 
 /** Resolve a command name or absolute path to an executable file, ignoring the worker shim directory. */
 export function executable(name: string, path: string, exclude?: string): string {
@@ -128,4 +137,20 @@ export async function resolveFeishuBot(machine: Machine, feishu: unknown, probe:
   const info = parsed(BotInfo, (await run('api', 'GET', '/open-apis/bot/v3/info', '--as', 'bot', '--format', 'ndjson')).split('\n')[0] ?? '')
   if (!info) return fail(new SetupError('feishuNoBot'))
   return { cli, appId: status.appId, brand: status.brand, botId: info.bot.open_id, name: info.bot.app_name }
+}
+
+/**
+ * Verify that the configured Jira CLI runs and reports a signed-in account.
+ * `jira me` prints the configured login without an API call; the account existence check is the Source's first poll,
+ * so a wrong account surfaces there, not at setup — matching how `resolveDeployment` treats a working CLI.
+ */
+export async function resolveJiraAccount(machine: Machine, jira: unknown, probe: Probe, path = process.env.PATH ?? ''): Promise<JiraAccount | undefined> {
+  const { cli: name } = JiraCliSchema.parse(jira ?? {})
+  if (!name) return undefined
+  const fail = (error: unknown): never => { throw error instanceof SetupError ? error : new SetupError('jiraCliFailed', { output: reason(error) }) }
+  let cli = ''
+  try { cli = executable(name, path, workerBin(machine.stateDir)) } catch (error) { fail(error) }
+  const me = (await probe([cli, 'me']).catch(fail)).trim()
+  if (!me) fail(new SetupError('jiraNoAccount'))
+  return { cli, name: me }
 }

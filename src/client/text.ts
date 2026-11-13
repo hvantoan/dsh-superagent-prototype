@@ -8,8 +8,8 @@ import { reasonText, type Reason } from '../core/reasons.ts'
 
 export type T = Translate<DshSuperagentKey>
 export const errorText = (failure: unknown): string => failure instanceof Error ? failure.message : String(failure)
-export const localized = (t: T, text: Localized | string | undefined): string =>
-  typeof text === 'string' ? text : text ? text[t('lang') === 'en' ? 'en' : 'zh'] : ''
+export const localized = (t: T, text: Localized | { zh: string; en: string; vi?: string } | string | undefined): string =>
+  typeof text === 'string' ? text : text ? (text as Record<string, string | undefined>)[t('lang')] ?? text.en : ''
 export const actorName = (t: T, actor: { name?: Localized } | undefined): string => actor?.name ? localized(t, actor.name)
   : t('automatedNotice')
 export function valueLabel(t: T, group: string, key: string | undefined): string {
@@ -41,7 +41,7 @@ export function readableMarkers(t: T, text: string): string {
     .replace(/\[Media: [^\]]*\]/g, t('mediaMarker')).replace(/\[Merged forward\]/g, t('forwardMarker'))
     .replace(/@_user_\d+/g, t('unknownMention'))
 }
-const timeLocale = (lang: string) => lang === 'en' ? 'en' : 'zh-CN'
+const timeLocale = (lang: string) => lang === 'vi' ? 'vi-VN' : lang === 'en' ? 'en' : 'zh-CN'
 export function when(value: string | undefined, lang: string): string {
   if (!value) return ''
   const date = new Date(value)

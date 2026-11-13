@@ -116,14 +116,14 @@ describe('Channels', () => {
   it('link each address to its page with its label', () => {
     const links = { repository: REPOSITORY, feishu: deployment.feishu! }
     expect(githubKind.channel!.link(githubChannel(8).address, links)).toEqual({ url: `https://github.com/${REPOSITORY}/issues/8`,
-      label: { zh: 'GitHub #8', en: 'GitHub #8' } })
+      label: { zh: 'GitHub #8', en: 'GitHub #8', vi: 'GitHub #8' } })
     const review = `https://github.com/${REPOSITORY}/pull/8#discussion_r7`
     expect(githubKind.channel!.link(githubChannel(8, review).address, links))
-      .toEqual({ url: review, label: { zh: 'GitHub #8 的 review 讨论', en: 'Review discussion on GitHub #8' } })
+      .toEqual({ url: review, label: { zh: 'GitHub #8 的 review 讨论', en: 'Review discussion on GitHub #8', vi: 'Thảo luận review trên GitHub #8' } })
     expect(githubKind.channel!.link(githubChannel(8).address, {}).url).toBe('')
     const message = feishuChannel('oc_1', 'om_1').address
     expect(feishuKind.channel!.link(message, links)).toEqual({ url: 'https://applink.feishu.cn/client/chat/open?openChatId=oc_1',
-      label: { zh: '飞书消息', en: 'Feishu message' }, triggerId: key('feishu', 'om_1') })
+      label: { zh: '飞书消息', en: 'Feishu message', vi: 'Tin nhắn Feishu' }, triggerId: key('feishu', 'om_1') })
   })
 })
 

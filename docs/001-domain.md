@@ -72,7 +72,7 @@ The concepts above and their rules are reusable. The Source implementations, the
 
 ## Glossary
 
-A reference list of the terms this and the later documents use, with their Chinese names; the later documents explain the terms not introduced above. The panel shows one language at a time; its (?) button opens this glossary with both languages. The messages agents send to people on GitHub and Feishu use plain language, not these terms.
+A reference list of the terms this and the later documents use, with their Chinese names; the later documents explain the terms not introduced above. The panel shows one language at a time; its (?) button opens this glossary in the active language. The messages agents send to people on GitHub and Feishu use plain language, not these terms.
 
 | Term | 中文 | Meaning |
 | --- | --- | --- |

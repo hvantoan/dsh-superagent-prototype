@@ -6,7 +6,7 @@ import type { DeploymentForm } from './deployment.tsx'
 import { EvalStatus } from './eval.tsx'
 import { ExecutionStatus } from './execution.tsx'
 import { ticketMark } from './marks.ts'
-import { GLOSSARY, GLOSSARY_VALUES, en, zh, type DshSuperagentKey } from './locales.ts'
+import { GLOSSARY, GLOSSARY_VALUES, en, vi, zh, type DshSuperagentKey } from './locales.ts'
 import { OverviewPage } from './overview.tsx'
 import { PanelProvider, usePanel, usePanelData } from './provider.tsx'
 import { HOME, TABS, initialLocation, lastSettingsGroup, remember, routeLabel, settingsRoute, type Location, type Route,
@@ -26,15 +26,15 @@ export interface AppProps {
 
 function Glossary({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = usePanel()
-  const chinese = t('tab.overview') === zh['tab.overview']
-  const [own, other] = chinese ? [zh, en] : [en, zh]
+  const lang = t('lang')
+  const [own, other] = lang === 'zh' ? [zh, en] : lang === 'vi' ? [vi, en] : [en, zh]
   const heading = (group: keyof typeof GLOSSARY) => t(group === 'roles' ? 'glossaryGroup.roles' : `tab.${group}`)
   return <Modal className="dt-glossary-modal" open={open} onClose={onClose} title={t('glossary')} closeLabel={t('close')}
     description={t('glossaryIntro')} footer={<Button variant="primary" onClick={onClose}>{t('close')}</Button>}>
     <div className="dt-glossary-body">
       <table className="dt-glossary">
         <thead><tr>
-          <th>{t(chinese ? 'glossaryChinese' : 'glossaryEnglish')}</th><th>{t(chinese ? 'glossaryEnglish' : 'glossaryChinese')}</th>
+          <th>{t(lang === 'zh' ? 'glossaryChinese' : lang === 'vi' ? 'glossaryVietnamese' : 'glossaryEnglish')}</th><th>{t(lang === 'en' ? 'glossaryChinese' : 'glossaryEnglish')}</th>
           <th>{t('glossaryMeaning')}</th>
         </tr></thead>
         {Object.entries(GLOSSARY).map(([group, keys]) => <tbody key={group}>

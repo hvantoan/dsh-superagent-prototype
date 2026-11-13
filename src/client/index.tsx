@@ -13,7 +13,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { openKnownSession, SessionNavigationError } from '../navigation.ts'
 import { App } from './app.tsx'
 import { PluginConfig, usePageForm } from './deployment.tsx'
-import { en, zh } from './locales.ts'
+import { en, vi, zh } from './locales.ts'
 import type { T } from './text.ts'
 
 type ClientContext = Context & { sessions: ISessions }
@@ -48,7 +48,12 @@ function Mounted({ ctx, t }: { ctx: ClientContext; t: T }) {
 export const inject = ['slots', 'locale', 'sessions', 'uiWorkspace']
 /** Registers the panel, sidebar icon, and Plugin Manager config view; `configForms` is optional (without it, machine settings are read-only). */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-superagent: dictionaries')
+  ctx.effect(() => {
+    const disposeDict = ctx.locale.register(NS, { zh, en })
+    const disposeLang = ctx.locale.addLanguage({ id: 'vi', label: 'Tiếng Việt', fallback: 'en' })
+    const disposeVi = ctx.locale.register(NS, 'vi', vi)
+    return () => { disposeVi(); disposeLang(); disposeDict() }
+  }, 'dsh-superagent: dictionaries')
   const t = ctx.locale.bind(NS)
   ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: PANEL_ID, locale: NS, inject: () => ({}) },
     (props: { t: T }) => <Mounted ctx={ctx} t={props.t} />))

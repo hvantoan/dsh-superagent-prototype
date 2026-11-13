@@ -7,6 +7,15 @@
 - id: dsh-superagent
   config:
     stateDir: <absolute path, for example /home/me/.dsh/state/superagent>
+# Serving the panel under a domain (docs/006-deployment.md): admit the public authority in the browser login fence and
+# let the management API accept same-site requests for it. Protect the hostname with authenticated access (e.g.
+# Cloudflare Access) — the management API has no credential of its own.
+# - id: connection
+#   config:
+#     trustedHosts: ['<panel.example.com>']
+# - id: dsh-superagent
+#   config:
+#     publicOrigin: https://<panel.example.com>
 # Feishu is optional: uncomment to enable its Source, then set the bot's lark-cli on the Feishu Source.
 # - id: dsh-superagent-feishu
 #   disabled: false

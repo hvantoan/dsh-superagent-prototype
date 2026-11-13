@@ -1,15 +1,16 @@
 import { expect, it } from 'vitest'
 import type { EffectKind } from '../src/app/effects.ts'
-import { en, zh, type DshSuperagentKey } from '../src/client/locales.ts'
+import { en, vi, zh, type DshSuperagentKey } from '../src/client/locales.ts'
 import { reasonLabel, type T } from '../src/client/text.ts'
 import { REASONS, USER_ERRORS } from '../src/core/index.ts'
 
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort()
 
-it('names the same placeholders in both languages', () => {
+it('names the same placeholders in all languages', () => {
   const keys = Object.keys(zh) as DshSuperagentKey[]
-  expect(keys.filter(key => placeholders(zh[key]).join() !== placeholders(en[key]).join())).toEqual([])
-  expect(keys.filter(key => !zh[key] || !en[key])).toEqual([])
+  expect(keys.filter(key => placeholders(zh[key]).join() !== placeholders(en[key]).join()
+    || placeholders(en[key]).join() !== placeholders(vi[key]).join())).toEqual([])
+  expect(keys.filter(key => !zh[key] || !en[key] || !vi[key])).toEqual([])
 })
 
 it('words a reason by its code with its values, each of a batch, and words a person or an assessor wrote as written', () => {
@@ -32,9 +33,9 @@ it('names every health entry of dsh-superagent itself, which the overview shows 
   expect(Object.keys(entries).filter(name => !(`health.${name}` in zh))).toEqual([])
 })
 
-it('words every refusal the host words by code, in both languages', () => {
+it('words every refusal the host words by code, in all languages', () => {
   expect(Object.keys(USER_ERRORS).filter(code => !zh[`userError.${code}` as DshSuperagentKey]
-    || !en[`userError.${code}` as DshSuperagentKey])).toEqual([])
+    || !en[`userError.${code}` as DshSuperagentKey] || !vi[`userError.${code}` as DshSuperagentKey])).toEqual([])
 })
 
 it('has words for every reason code the core records', () => {
