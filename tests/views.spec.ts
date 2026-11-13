@@ -72,9 +72,9 @@ it('names each sender as the Policy lists it, by its id where the id is readable
     id: 'bob' }),
     view.actor({ source: 'feishu', id: 'ou_bob' }), view.actor({ source: 'feishu', id: 'ou_bot' }, false), view.actor({ source: 'feishu',
       id: '' })])
-    .toEqual([{ source: 'feishu', id: 'OU_ALICE', name: { zh: 'Alice', en: 'Alice' } }, { source: 'github', id: 'alice',
-      name: { zh: 'alice', en: 'alice' } },
-      { source: 'github', id: 'bob', name: { zh: 'bob', en: 'bob' } }, { source: 'feishu', id: 'ou_bob',
+    .toEqual([{ source: 'feishu', id: 'OU_ALICE', name: { zh: 'Alice', en: 'Alice', vi: 'Alice' } }, { source: 'github', id: 'alice',
+      name: { zh: 'alice', en: 'alice', vi: 'alice' } },
+      { source: 'github', id: 'bob', name: { zh: 'bob', en: 'bob', vi: 'bob' } }, { source: 'feishu', id: 'ou_bob',
         name: feishuKind.policy!.unnamed!.person },
       { source: 'feishu', id: 'ou_bot', name: feishuKind.policy!.unnamed!.bot }, { source: 'feishu', id: '' }])
   expect(view.rule('copy')).toEqual({ id: 'copy', name: 'Copy fixes' })
@@ -95,7 +95,7 @@ it('classifies a Thread by what it is doing, and offers a filtered Trigger of a 
   const rows = ['e1', 'e2', 'e3'].map(id => triggerView(view, store.triggers.get(id)!))
   // A queued Trigger waits for Eval already, and an automated one is not offered.
   expect(rows.map(row => row.actions.requeue)).toEqual([true, false, false])
-  expect(rows[0]!.actor.name).toEqual({ zh: 'Alice', en: 'Alice' })
+  expect(rows[0]!.actor.name).toEqual({ zh: 'Alice', en: 'Alice', vi: 'Alice' })
 })
 
 it('states each Source by the first state that holds', () => {
@@ -225,7 +225,7 @@ it('names a listed bot as the Policy lists it, and gives a bot\'s Mandate a basi
   const sources = new SourceRegistry(() => store.settings())
   sources.register(feishuKind)
   const view = snapshot({ store, sources, links })
-  expect(view.actor({ source: 'feishu', id: 'cli_review' }, false).name).toEqual({ zh: '评审机器人', en: '评审机器人' })
+  expect(view.actor({ source: 'feishu', id: 'cli_review' }, false).name).toEqual({ zh: '评审机器人', en: '评审机器人', vi: '评审机器人' })
   expect(basisFacts({ via: 'bot', sender: '评审机器人', addressed: 'mention', observation: { mode: 'auto' } }, view.rule).facts)
     .toEqual([{ name: 'sender', value: '评审机器人' }, { name: 'bot' }, { name: 'addressed', value: 'mention' }, { name: 'mode', value: 'auto' }])
 })

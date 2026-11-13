@@ -6,7 +6,7 @@ import type { Deployment } from '../deployment.ts'
 import type { Commands } from '../infra/commands.ts'
 import type { SourceContext, SourceHost } from './host.ts'
 
-export interface Localized { zh: string; en: string }
+export interface Localized { zh: string; en: string; vi: string }
 /** `advanced` folds a rarely changed field (such as a polling tunable) behind the card's Advanced section. */
 interface FieldBase { key: string; label: Localized; hint?: Localized; advanced?: true }
 /**

@@ -57,7 +57,7 @@ it('decodes path parameters and parses each route\'s query', async () => {
   const call = serve({
     store: { settings: () => SettingsSchema.parse({}),
       read: { decisions: (filter: unknown, offset: number, limit: number) => { seen.push({ filter, offset, limit }); return { items: [], more: false } } } },
-    links: () => () => ({ url: '', label: { zh: '', en: '' } }),
+    links: () => () => ({ url: '', label: { zh: '', en: '', vi: '' } }),
     engine: { unsubscribe: (key: string) => { seen.push(key); return true } },
     sessions: { delivery: async () => 'injected' },
   })
@@ -78,6 +78,25 @@ it('answers only a same-origin request from the panel on the loopback address', 
   expect(await post({ host: 'localhost:3082', origin: 'http://localhost:3082' })).toMatchObject({ status: 200 })
   // Management routes require a loopback Web server.
   expect(() => serve({}, '0.0.0.0')).toThrow('Orchestrator management requires a loopback Web server')
+})
+
+it('serves the panel origin only when publicOrigin is configured', async () => {
+  const call = serve({
+    machine: { publicOrigin: { get: () => 'https://dsh.henmio.com' } },
+    sessions: { delivery: async () => 'injected' }, engine: { unsubscribe: () => true },
+  })
+  const post = (headers: Headers) => call('POST', 'threads/github%3A1/unsubscribe', undefined, headers)
+  // The tunneled request carries the public Host and Origin; the loopback check would 403 without the configured origin.
+  expect(await post({ host: 'dsh.henmio.com', origin: 'https://dsh.henmio.com' })).toMatchObject({ status: 200 })
+  // A different authority at the same tunnel is still refused, and a loopback request keeps working.
+  expect(await post({ host: 'other.henmio.com', origin: 'https://other.henmio.com' })).toMatchObject({ status: 403 })
+  expect(await post({ host: 'dsh.henmio.com', origin: 'https://evil.example' })).toMatchObject({ status: 403 })
+  expect(await post({ host: '127.0.0.1:3082', origin: 'https://dsh.henmio.com' })).toMatchObject({ status: 403 })
+  expect(await post({})).toMatchObject({ status: 200 })
+  // Without publicOrigin a tunneled request is refused.
+  const local = serve({ sessions: { delivery: async () => 'injected' }, engine: { unsubscribe: () => true } })
+  expect(await local('POST', 'threads/github%3A1/unsubscribe', undefined, { host: 'dsh.henmio.com', origin: 'https://dsh.henmio.com' }))
+    .toMatchObject({ status: 403 })
 })
 
 it('answers a prompt save that lost a race with 409, and a settings body over 128 KiB with 400', async () => {

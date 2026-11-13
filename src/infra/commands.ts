@@ -110,6 +110,13 @@ export class Commands {
     if (!result.ok) throw membership(new CliError(`${result.error?.message ?? 'Feishu command failed'}${code ? ` (${code})` : ''}`, code))
     return result.data
   }
+  /**
+   * Runs the Jira CLI configured on the Jira Source and parses its JSON output; the CLI must carry the account's own
+   * credentials. Kept off `deployment` because a failing Jira CLI reports through the Source's poll-failure health rather
+   * than deployment setup.
+   * @throws CliError on CLI failure.
+   */
+  async jira<T>(cli: string, args: string[]): Promise<T> { return JSON.parse(await this.run(cli, args)) as T }
   /** Runs `git` on PATH using the agent's isolated git environment and credential helper. */
   async git(args: string[], cwd: string): Promise<string> { return this.run('git', args, cwd) }
 }

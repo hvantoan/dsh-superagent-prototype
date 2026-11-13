@@ -26,7 +26,7 @@ export const agentPull = (pr: { user: { login: string }; head?: { repo?: { full_
 /** True when a branch belongs to the ticket: its last path segment is the ticket's short name, such as `agent/<name>`. */
 export const ticketBranch = (ticket: Pick<Ticket, 'execution'>, ref: string): boolean =>
   !!ticket.execution?.name && ref.split('/').at(-1) === ticket.execution.name
-const AUTO_MERGE_ON: ThreadFact = { label: { zh: '自动合并', en: 'Auto-merge' }, value: { zh: '已开启', en: 'on' } }
+const AUTO_MERGE_ON: ThreadFact = { label: { zh: '自动合并', en: 'Auto-merge', vi: 'Tự động merge' }, value: { zh: '已开启', en: 'on', vi: 'đang bật' } }
 
 /**
  * Validates and binds an open PR to a ticket when the PR is either the ticket's origin PR or an agent-authored PR on the ticket's branch, enforcing that one PR binds to at most one open ticket.

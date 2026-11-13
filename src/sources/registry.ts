@@ -99,7 +99,7 @@ export class SourceRegistry implements SourceScope {
   }
   link(channel: ChannelRef, links: ChannelLinks): ChannelLink {
     const link = this.kinds.get(channel.source)?.channel?.link(channel.address, links)
-    return link ?? { url: '', label: { zh: channel.source, en: channel.source } }
+    return link ?? { url: '', label: { zh: channel.source, en: channel.source, vi: channel.source } }
   }
   find(query: string): { threads: string[]; terms: string[] } {
     const found = [...this.kinds.values()].flatMap(kind => kind.find ? [kind.find(query)] : [])

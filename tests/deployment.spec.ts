@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Config, executable, machineOf, resolveDeployment, resolveFeishuBot, type Machine, type Probe } from '../src/deployment.ts'
+import { Config, executable, machineOf, resolveDeployment, resolveFeishuBot, resolveJiraAccount, type Machine, type Probe } from '../src/deployment.ts'
 import { gitEnv } from './fixtures/git.ts'
 
 const exec = promisify(execFile)
@@ -45,8 +45,10 @@ describe('configuration schema', () => {
     const read = machineOf(Config({ stateDir: join(dir, 'state') }))
     // Limits are volatile references that the loader updates in place and callers read when used.
     expect({ ...read, promptMaxChars: read.promptMaxChars.get(), admissionContextMaxPages: read.admissionContextMaxPages.get(),
-      admissionContextTimeoutMs: read.admissionContextTimeoutMs.get() })
-      .toEqual({ stateDir: join(dir, 'state'), promptMaxChars: 100000, admissionContextMaxPages: 10, admissionContextTimeoutMs: 15000 })
+      admissionContextTimeoutMs: read.admissionContextTimeoutMs.get(), publicOrigin: read.publicOrigin.get() })
+      .toEqual({ stateDir: join(dir, 'state'), promptMaxChars: 100000, admissionContextMaxPages: 10, admissionContextTimeoutMs: 15000,
+        publicOrigin: '' })
+    expect(() => machineOf(Config({ stateDir: join(dir, 'state'), publicOrigin: 'https://example.com/path' }))).toThrow('publicOrigin')
     expect(() => Config(minimal({ stateDir: 'relative/dir' }))).toThrow()
     expect(() => Config(minimal({ stateDir: '~/dir' }))).toThrow()
   })
@@ -97,5 +99,14 @@ describe('setup', () => {
     await refuses('feishuNoBot')
     program(join(dir, 'bin', 'lark-cli'), 'echo "not configured" >&2; exit 1')
     await refuses('feishuCliFailed', { output: expect.stringContaining('not configured') })
+  })
+  it('reads the Jira account from a working Jira CLI, or finds none when the Source names no CLI', async () => {
+    expect(await resolveJiraAccount(machine(), {}, probe, path)).toBeUndefined()
+    program(join(dir, 'bin', 'jira'), `case "$*" in\n  "me") echo 'agent-bot@example.com' ;;\nesac`)
+    expect(await resolveJiraAccount(machine(), { cli: 'jira' }, probe, path)).toEqual({ cli: join(dir, 'bin', 'jira'), name: 'agent-bot@example.com' })
+    program(join(dir, 'bin', 'jira'), 'echo "not configured" >&2; exit 1')
+    await expect(resolveJiraAccount(machine(), { cli: 'jira' }, probe, path)).rejects.toEqual(setupError('jira', 'jiraCliFailed', { output: expect.stringContaining('not configured') }))
+    program(join(dir, 'bin', 'jira'), 'exit 0')
+    await expect(resolveJiraAccount(machine(), { cli: 'jira' }, probe, path)).rejects.toEqual(setupError('jira', 'jiraNoAccount'))
   })
 })

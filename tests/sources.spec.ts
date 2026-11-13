@@ -361,9 +361,9 @@ describe('github source', () => {
   it('describes CI as one fact: failed checks first, then unfinished ones, otherwise passed', () => {
     const counts = ciCounts({ head: 'abc', checks: [{ name: 'e2e', status: 'completed', conclusion: 'failure' }, { name: 'lint', status: 'in_progress', conclusion: null }, { name: 'docs', status: 'completed', conclusion: 'skipped' }], statuses: [{ context: 'deploy', state: 'error' }, { context: 'preview', state: 'pending' }] })
     expect(counts).toEqual({ failed: 2, running: 2 })
-    expect(ciFact(counts)).toEqual({ label: { zh: 'CI 失败', en: 'CI failed' }, value: '2', problem: true })
-    expect(ciFact({ failed: 0, running: 1 })).toEqual({ label: { zh: 'CI 进行中', en: 'CI running' }, value: '1' })
-    expect(ciFact({ failed: 0, running: 0 })).toEqual({ label: 'CI', value: { zh: '通过', en: 'passed' } })
+    expect(ciFact(counts)).toEqual({ label: { zh: 'CI 失败', en: 'CI failed', vi: 'CI thất bại' }, value: '2', problem: true })
+    expect(ciFact({ failed: 0, running: 1 })).toEqual({ label: { zh: 'CI 进行中', en: 'CI running', vi: 'CI đang chạy' }, value: '1' })
+    expect(ciFact({ failed: 0, running: 0 })).toEqual({ label: 'CI', value: { zh: '通过', en: 'passed', vi: 'đã pass' } })
   })
   it('starts a review comment\'s text with its file, line and diff lines, and keeps them and the comment it answers', () => {
     const comment: GithubComment = { id: 5, body: 'Use the theme token', user: { login: 'carol', type: 'User' }, path: 'src/render.ts', line: 43,
@@ -560,7 +560,7 @@ describe('github source', () => {
     // The notification, the ticket's PR and the subscribed Thread share one read of the PR.
     expect(reads.filter(path => path === 'pulls/9')).toHaveLength(1)
     const facts = () => h.store.threads.get('github:9')!.meta.facts as Record<string, unknown>
-    expect(facts()).toMatchObject({ autoMerge: { label: { zh: '自动合并', en: 'Auto-merge' } }, ci: { value: '1' } })
+    expect(facts()).toMatchObject({ autoMerge: { label: { zh: '自动合并', en: 'Auto-merge', vi: 'Tự động merge' } }, ci: { value: '1' } })
     routes['pulls/9'] = { ...pr, auto_merge: null }
     routes['commits/abc/check-runs'] = { check_runs: [{ name: 'test', status: 'completed', conclusion: 'failure' }] }
     await pollRound(h)
@@ -974,10 +974,12 @@ describe('source context', () => {
   it('gives each kind the setup problem whose place it is', () => {
     const feishu: SetupProblem = { place: 'feishu', code: 'feishuNoBot', values: {}, detail: 'No bot' }
     const github: SetupProblem = { place: 'github', code: 'agentCliUnset', values: {}, detail: 'No CLI' }
-    const h = host({ feishuProblem: feishu, setupProblem: github })
+    const jira: SetupProblem = { place: 'jira', code: 'jiraNoAccount', values: {}, detail: 'No account' }
+    const h = host({ feishuProblem: feishu, jiraProblem: jira, setupProblem: github })
     expect(h.context(feishuKind).problem).toBe(feishu)
     expect(h.context(githubKind).problem).toBe(github)
     expect(h.context({ kind: 'probe', health: [] }).problem).toBeUndefined()
+    expect(h.context({ kind: 'jira', health: [] }).problem).toBe(jira)
     h.store.close()
   })
   it('lets a kind report only its own health entries', () => {
